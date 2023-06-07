@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace Tetris
 {
-    public partial class Teris : Form
+    public partial class Tetris : Form
     {
-        public Teris()
+        public Tetris()
         {
             InitializeComponent();
             InitGameBlockContainer();

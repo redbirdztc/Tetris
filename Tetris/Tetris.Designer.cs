@@ -1,6 +1,6 @@
 ﻿namespace Tetris
 {
-    partial class Teris
+    partial class Tetris
     {
         /// <summary>
         /// Required designer variable.
@@ -25,6 +25,12 @@
         /// Keep cell containers will light when blocks reach and darken when blocks leave.
         /// </summary>
         private System.Windows.Forms.Panel[][] CellContainer;
+
+        public System.Windows.Forms.Panel[][] GetCellContainer()
+        {
+            return CellContainer;
+        }
+        
         private void InitGameBlockContainer()
         {
             this.SuspendLayout();
@@ -43,13 +49,13 @@
                 for (var j = 0; j < cellsCol.Length; j++)
                 {
                     cellsCol[j]=new System.Windows.Forms.Panel();
-                     cellsCol[j].BackColor = System.Drawing.Color.Black;
-                     cellsCol[j].Location = new System.Drawing.Point(this.GameArea.Location.X+4+col*20,this.GameArea.Location.Y+ 4+row*20);
-                     cellsCol[j].Name = "GameArea";
-                     cellsCol[j].Size = new System.Drawing.Size(16, 16);
-                     this.Controls.Add(cellsCol[j]);
-                     cellsCol[j].BringToFront();
-                     col++;
+                    cellsCol[j].BackColor = System.Drawing.Color.Black;
+                    cellsCol[j].Location = new System.Drawing.Point(this.GameArea.Location.X+4+col*20,this.GameArea.Location.Y+ 4+row*20);
+                    cellsCol[j].Name = "GameArea";
+                    cellsCol[j].Size = new System.Drawing.Size(16, 16);
+                    this.Controls.Add(cellsCol[j]);
+                    cellsCol[j].BringToFront();
+                    col++;
                 }
 
                 row++;
@@ -82,9 +88,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(427, 450);
             this.Controls.Add(this.GameArea);
-            this.Name = "Teris";
+            this.Name = "Tetris";
             this.Text = "Tetris";
             this.ResumeLayout(false);
+            
         }
 
         private System.Windows.Forms.Panel GameArea;

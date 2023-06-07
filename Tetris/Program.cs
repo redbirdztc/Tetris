@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -14,9 +15,22 @@ namespace Tetris
         [STAThread]
         static void Main()
         {
+            Console.WriteLine(@"program start");
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Teris());
+            var tetris = new Tetris();
+
+            var gameplay = new GamePlay(tetris, 20, 10);
+            new Thread(gameplay.Start).Start();
+            new Thread(() =>
+            {
+                for (;;)
+                {
+                    Thread.Sleep(TimeSpan.FromMilliseconds(100));
+                    Console.ReadLine();
+                }
+            }).Start();
+            Application.Run(tetris);
         }
     }
 }

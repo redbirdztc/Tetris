@@ -47,16 +47,17 @@
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Block.cs" />
-        <Compile Include="Teris.cs">
+        <Compile Include="GamePlay.cs" />
+        <Compile Include="Tetris.cs">
             <SubType>Form</SubType>
         </Compile>
-        <Compile Include="Teris.Designer.cs">
-            <DependentUpon>Teris.cs</DependentUpon>
+        <Compile Include="Tetris.Designer.cs">
+            <DependentUpon>Tetris.cs</DependentUpon>
         </Compile>
         <Compile Include="Program.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
-        <EmbeddedResource Include="Teris.resx">
-          <DependentUpon>Teris.cs</DependentUpon>
+        <EmbeddedResource Include="Tetris.resx">
+          <DependentUpon>Tetris.cs</DependentUpon>
         </EmbeddedResource>
         <EmbeddedResource Include="Properties\Resources.resx">
             <Generator>ResXFileCodeGenerator</Generator>

@@ -1,29 +1,38 @@
-﻿namespace Tetris
+﻿using System.Collections.Generic;
+
+namespace Tetris
 {
     public class Block
     {
-        // x,y
-        protected int[][] points;
+        // row-col 
+        protected int[][] Points;
+
+        private int[][] RecordedPoints;
+
+        public IEnumerable<int[]> GetPoints()
+        {
+            return Points;
+        }
 
         // x,y
-        protected int[] rotationPoint;
+        protected int[] RotationPoint;
 
-        public Block()
+        protected Block()
         {
         }
 
         public Block(int[][] points, int[] rotationPoint)
         {
-            this.rotationPoint = rotationPoint;
-            this.points = points;
+            this.RotationPoint = rotationPoint;
+            this.Points = points;
         }
 
         public void Rotate()
         {
-            foreach (var point in points)
+            foreach (var point in Points)
             {
-                var xOffset = point[0] - rotationPoint[0];
-                var yOffset = point[1] - rotationPoint[1];
+                var xOffset = point[1] - RotationPoint[1];
+                var yOffset = point[0] - RotationPoint[0];
 
                 if ((xOffset < 0 && yOffset < 0) || (xOffset > 0 && yOffset > 0))
                 {
@@ -34,17 +43,17 @@
                     xOffset = -xOffset;
                 }
 
-                point[0] = rotationPoint[0] + yOffset;
-                point[1] = rotationPoint[1] + xOffset;
+                point[1] = RotationPoint[1] + yOffset;
+                point[0] = RotationPoint[0] + xOffset;
             }
         }
 
         public void ContraRotate()
         {
-            foreach (var point in points)
+            foreach (var point in Points)
             {
-                var xOffset = point[0] - rotationPoint[0];
-                var yOffset = point[1] - rotationPoint[1];
+                var xOffset = point[1] - RotationPoint[1];
+                var yOffset = point[0] - RotationPoint[0];
 
                 if ((xOffset < 0 && yOffset < 0) || (xOffset > 0 && yOffset > 0))
                 {
@@ -55,24 +64,79 @@
                     yOffset = -yOffset;
                 }
 
-                point[0] = rotationPoint[0] + yOffset;
-                point[1] = rotationPoint[1] + xOffset;
+                point[1] = RotationPoint[1] + yOffset;
+                point[0] = RotationPoint[0] + xOffset;
             }
         }
 
         public void Fall()
         {
-            foreach (var point in points)
+            foreach (var point in Points)
             {
-                point[1]++;
+                point[0]++;
             }
+
+            RotationPoint[0]++;
         }
 
         public void Rise()
         {
-            foreach (var point in points)
+            foreach (var point in Points)
+            {
+                point[0]--;
+            }
+
+            RotationPoint[0]--;
+        }
+
+        public void MoveLeft()
+        {
+            foreach (var point in Points)
             {
                 point[1]--;
+            }
+
+            RotationPoint[1]--;
+        }
+
+        public void MoveRight()
+        {
+            foreach (var point in Points)
+            {
+                point[1]++;
+            }
+
+            RotationPoint[1]++;
+        }
+
+        public void RecordState()
+        {
+            if (RecordedPoints == null)
+            {
+                RecordedPoints = new int[Points.Length][];
+                for (var i = 0; i < RecordedPoints.Length; i++)
+                {
+                    RecordedPoints[i] = new int[Points[0].Length];
+                }
+            }
+
+            for (var i = 0; i < Points.Length; i++)
+            {
+                for (var j = 0; j < Points[i].Length; j++)
+                {
+                    RecordedPoints[i][j] = Points[i][j];
+                }
+            }
+        }
+
+        public void Recover()
+        {
+            for (var i = 0; i < Points.Length; i++)
+            {
+                for (var j = 0; j < Points[i].Length; j++)
+                {
+                    Points[i][j] = RecordedPoints[i][j];
+                }
             }
         }
     }
@@ -81,12 +145,12 @@
     {
         public BlockI(int[] rotationPoint)
         {
-            this.rotationPoint = rotationPoint;
-            points = new int[4][];
-            points[0] = new[] { rotationPoint[0], rotationPoint[1] };
-            points[1] = new[] { points[0][0], points[0][1] + 1 };
-            points[2] = new[] { points[0][0], points[0][1] - 1 };
-            points[3] = new[] { points[0][0], points[0][1] + 2 };
+            this.RotationPoint = rotationPoint;
+            Points = new int[4][];
+            Points[0] = new[] { rotationPoint[0], rotationPoint[1] };
+            Points[1] = new[] { Points[0][0] + 1, Points[0][1] };
+            Points[2] = new[] { Points[0][0] - 1, Points[0][1] };
+            Points[3] = new[] { Points[0][0] + 2, Points[0][1] };
         }
     }
 }
