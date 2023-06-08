@@ -82,16 +82,15 @@
             this.GameArea.Size = new System.Drawing.Size(204, 404);
             this.GameArea.TabIndex = 0;
             // 
-            // Teris
+            // Tetris
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(427, 450);
+            this.ClientSize = new System.Drawing.Size(419, 430);
             this.Controls.Add(this.GameArea);
             this.Name = "Tetris";
             this.Text = "Tetris";
             this.ResumeLayout(false);
-            
         }
 
         private System.Windows.Forms.Panel GameArea;

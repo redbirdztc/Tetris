@@ -52,20 +52,20 @@ namespace Tetris
             var timeInterval = TimeSpan.FromMilliseconds(500);
             var nextRenderTime = now.Add(timeInterval);
 
-
             for (;;)
             {
                 Render();
                 if (operationQueue.Count > 0)
                 {
                     var shouldSetDown = HandleUserOperation();
+
+                    Render();
+                    operationQueue.Clear();
+
                     if (shouldSetDown)
                     {
                         goto afterQuickFall;
                     }
-
-                    Render();
-                    operationQueue.Clear();
                 }
                 else
                 {
@@ -110,12 +110,12 @@ namespace Tetris
                 }
 
                 SetFallingBlockDown();
-                EliminateRow();
+                EliminateCompletedRow();
                 _fallingBlock = NewBlock();
             }
         }
 
-        // return bool that should falling block be set down
+        // return bool when falling block should be set down
         private bool HandleUserOperation()
         {
             // handle the operations
@@ -146,7 +146,7 @@ namespace Tetris
                         break;
                     case "w":
                         _fallingBlock.RecordState();
-                        _fallingBlock.Rotate();
+                        _fallingBlock.BlockGameRotate();
                         if (_fallingBlock.GetPoints()
                             .Any(point => point[1] >= _playArea[0].Length))
                         {
@@ -166,7 +166,6 @@ namespace Tetris
                         break;
                     case "s": break;
                     case "j":
-
                         for (; !FallingBlockHasConflictsWithBottom();)
                         {
                             _fallingBlock.Fall();
@@ -174,18 +173,13 @@ namespace Tetris
                             {
                                 if (point[0] >= _playArea.Length)
                                 {
-                                    operationQueue.Clear();
                                     _fallingBlock.Rise();
-                                    Render();
                                     return true;
                                 }
                             }
                         }
 
-                        Console.WriteLine(@"quick fall");
-                        operationQueue.Clear();
                         _fallingBlock.Rise();
-                        Render();
                         return true;
                 }
             }
@@ -205,7 +199,7 @@ namespace Tetris
         }
 
         // logic of eliminating row
-        private void EliminateRow()
+        private void EliminateCompletedRow()
         {
             var rowFallArray = new int[_playArea.Length];
 
@@ -291,12 +285,31 @@ namespace Tetris
         private bool FallingBlockHasConflictsWithBottom()
         {
             var fallingPoints = _fallingBlock.GetPoints();
-            return fallingPoints.Any(fallingPoint => _playArea[fallingPoint[0]][fallingPoint[1]]);
+            return fallingPoints.Any(fallingPoint =>
+                fallingPoint[0] >= _playArea.Length || _playArea[fallingPoint[0]][fallingPoint[1]]);
         }
 
         private Block NewBlock()
         {
-            return new BlockI(new[] { 2, 5 });
+            var r = new Random().Next(6);
+            // return new BlockZ(new[] { 2, 5 });
+            switch (r)
+            {
+                case 0:
+                    return new BlockI(new[] { 2, 5 });
+                case 1:
+                    return new BlockO(new[] { 2, 5 });
+                case 2:
+                    return new BlockZ(new[] { 2, 5 });
+                case 3:
+                    return new BlockS(new[] { 2, 5 });
+                case 4:
+                    return new BlockJ(new[] { 2, 5 });
+                case 5:
+                    return new BlockL(new[] { 2, 5 });
+                default:
+                    return NewBlock();
+            }
         }
     }
 }
