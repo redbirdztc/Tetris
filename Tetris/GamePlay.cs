@@ -164,7 +164,14 @@ namespace Tetris
                         }
 
                         break;
-                    case "s": break;
+                    case "s":
+                        _fallingBlock.MoveDown();
+                        if (FallingBlockHasConflictsWithBottom())
+                        {
+                            _fallingBlock.Rise();
+                        }
+
+                        break;
                     case "j":
                         for (; !FallingBlockHasConflictsWithBottom();)
                         {

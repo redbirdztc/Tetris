@@ -96,6 +96,16 @@ namespace Tetris
             RotationPoint[1]++;
         }
 
+        public void MoveDown()
+        {
+            foreach (var point in Points)
+            {
+                point[0]++;
+            }
+
+            RotationPoint[0]++;
+        }
+
         public void RecordState()
         {
             if (RecordedPoints == null)
