@@ -39,7 +39,7 @@ namespace Tetris
             }
         }
 
-        public  void ContraRotate()
+        public void ContraRotate()
         {
             foreach (var point in Points)
             {
@@ -53,7 +53,7 @@ namespace Tetris
 
         public virtual void BlockGameRotate()
         {
-           Rotate(); 
+            Rotate();
         }
 
         public void Fall()
@@ -222,9 +222,9 @@ namespace Tetris
             RotationPoint = rotationPoint;
             Points = new int[4][];
             Points[0] = new[] { rotationPoint[0], rotationPoint[1] };
-            Points[1] = new[] { Points[0][0], Points[0][1] - 1 };
+            Points[1] = new[] { Points[0][0], Points[0][1] + 1 };
             Points[2] = new[] { Points[0][0] - 1, Points[0][1] };
-            Points[3] = new[] { Points[0][0] - 1, Points[0][1] + 1 };
+            Points[3] = new[] { Points[0][0] - 1, Points[0][1] - 1 };
         }
 
         public override void BlockGameRotate()
@@ -271,6 +271,18 @@ namespace Tetris
             Points[2] = new[] { Points[0][0] - 2, Points[0][1] };
             Points[3] = new[] { Points[0][0], Points[0][1] + 1 };
         }
+    }
 
+    public class BlockT : Block
+    {
+        public BlockT(int[] rotationPoint)
+        {
+            RotationPoint = rotationPoint;
+            Points = new int[4][];
+            Points[0] = new[] { rotationPoint[0], rotationPoint[1] };
+            Points[1] = new[] { Points[0][0] - 1, Points[0][1] };
+            Points[2] = new[] { Points[0][0], Points[0][1] - 1 };
+            Points[3] = new[] { Points[0][0], Points[0][1] + 1 };
+        }
     }
 }

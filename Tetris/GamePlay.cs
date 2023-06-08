@@ -298,7 +298,7 @@ namespace Tetris
 
         private Block NewBlock()
         {
-            var r = new Random().Next(6);
+            var r = new Random().Next(7);
             // return new BlockZ(new[] { 2, 5 });
             switch (r)
             {
@@ -314,6 +314,8 @@ namespace Tetris
                     return new BlockJ(new[] { 2, 5 });
                 case 5:
                     return new BlockL(new[] { 2, 5 });
+                case 6:
+                    return new BlockT(new[] { 2, 5 });
                 default:
                     return NewBlock();
             }
