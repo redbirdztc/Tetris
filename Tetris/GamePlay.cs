@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
+using Serilog.Core;
 
 namespace Tetris
 {
@@ -26,10 +27,13 @@ namespace Tetris
 
         private List<string> operationQueue;
 
-        public GamePlay(Tetris form, int rows, int cols)
+        public Logger Log { get; set; }
+
+        public GamePlay(Logger log, Tetris form, int rows, int cols)
         {
             _form = form;
             _playArea = new bool[rows + 2][];
+            Log = log;
             for (var i = 0; i < _playArea.Length; i++)
             {
                 _playArea[i] = new bool[cols];
@@ -54,24 +58,23 @@ namespace Tetris
 
             for (;;)
             {
-                Render();
                 if (operationQueue.Count > 0)
                 {
                     var shouldSetDown = HandleUserOperation();
 
-                    Render();
                     operationQueue.Clear();
 
                     if (shouldSetDown)
                     {
                         goto afterQuickFall;
                     }
+
+                    Render();
+                    continue;
                 }
-                else
-                {
-                    // have a nap
-                    Thread.Sleep(TimeSpan.FromMilliseconds(5));
-                }
+
+                // have a nap
+                Thread.Sleep(TimeSpan.FromMilliseconds(5));
 
                 if (DateTime.Now.CompareTo(nextRenderTime) < 0) continue;
 
@@ -87,9 +90,12 @@ namespace Tetris
                     }
                 }
 
-                if (!shouldBeSetDown && !FallingBlockHasConflictsWithBottom())
+                shouldBeSetDown |= FallingBlockHasConflictsWithBottom();
+
+                if (!shouldBeSetDown)
                 {
                     nextRenderTime = nextRenderTime.Add(timeInterval);
+                    Render();
                     continue;
                 }
 
@@ -106,12 +112,14 @@ namespace Tetris
                         _playArea[i] = new bool[col];
                     }
 
+                    Render();
                     goto startGame;
                 }
 
                 SetFallingBlockDown();
                 EliminateCompletedRow();
                 _fallingBlock = NewBlock();
+                Render();
             }
         }
 
@@ -124,27 +132,27 @@ namespace Tetris
                 switch (operation)
                 {
                     case "a":
+                    case "A":
                         _fallingBlock.MoveLeft();
                         if (_fallingBlock.GetPoints().Any(point => point.Any(col => col < 0)) ||
-                            FallingBlockHasConflictsWithBottom())
+                            FallingBlockHasConflictsWithOtherBlocks())
                         {
                             _fallingBlock.MoveRight();
                         }
 
-                        Console.WriteLine(@"left move");
                         break;
                     case "d":
+                    case "D":
                         _fallingBlock.MoveRight();
-                        if (_fallingBlock.GetPoints()
-                                .Any(point => point[1] >= _playArea[0].Length) ||
-                            FallingBlockHasConflictsWithBottom())
+                        if (_fallingBlock.GetPoints().Any(point => point[1] >= _playArea[0].Length) ||
+                            FallingBlockHasConflictsWithOtherBlocks())
                         {
                             _fallingBlock.MoveLeft();
                         }
 
-                        Console.WriteLine(@"right move");
                         break;
                     case "w":
+                        case "W":
                         _fallingBlock.RecordState();
                         _fallingBlock.BlockGameRotate();
                         if (_fallingBlock.GetPoints()
@@ -165,6 +173,7 @@ namespace Tetris
 
                         break;
                     case "s":
+                        case "S":
                         _fallingBlock.MoveDown();
                         if (FallingBlockHasConflictsWithBottom())
                         {
@@ -173,17 +182,15 @@ namespace Tetris
 
                         break;
                     case "j":
-                        for (; !FallingBlockHasConflictsWithBottom();)
+                    case "J":
+                        for (; !FallingBlockHasConflictsWithBottom(); _fallingBlock.Fall())
                         {
-                            _fallingBlock.Fall();
-                            foreach (var point in _fallingBlock.GetPoints())
+                            if (!_fallingBlock.GetPoints().Any(point => point[0] >= _playArea.Length))
                             {
-                                if (point[0] >= _playArea.Length)
-                                {
-                                    _fallingBlock.Rise();
-                                    return true;
-                                }
+                                continue;
                             }
+
+                            break;
                         }
 
                         _fallingBlock.Rise();
@@ -199,6 +206,7 @@ namespace Tetris
             var input = e.KeyChar.ToString();
             if (new[] { "w", "s", "a", "d", "j" }.Contains(input))
             {
+                Log.Debug("operation {o} received", e.KeyChar);
                 operationQueue.Add(input);
             }
 
@@ -221,6 +229,7 @@ namespace Tetris
                     }
                 }
 
+                Log.Debug("row {row} eliminated", i);
                 // upper rows falls +1
                 for (var j = i - 1; j > 1; j--)
                 {
@@ -238,10 +247,8 @@ namespace Tetris
                     continue;
                 }
 
-                for (var j = 0; j < _playArea[i].Length; j++)
-                {
-                    _playArea[i + rowFallArray[i]] = _playArea[i];
-                }
+                _playArea[i + rowFallArray[i]] = _playArea[i];
+                _playArea[i] = new bool[_playArea[0].Length];
             }
         }
 
@@ -252,7 +259,9 @@ namespace Tetris
 
         private void SetFallingBlockDown()
         {
-            foreach (var point in _fallingBlock.GetPoints())
+            var points = _fallingBlock.GetPoints();
+            Log.Debug("set falling block down: {fallingBlock}", points);
+            foreach (var point in points)
             {
                 _playArea[point[0]][point[1]] = true;
             }
@@ -261,6 +270,7 @@ namespace Tetris
         // render 
         private void Render()
         {
+            // Log.Debug("render play area : {playArea}",_playArea);
             var status = _status;
             _status = "Rendering";
             var cellContainer = _form.GetCellContainer();
@@ -269,8 +279,10 @@ namespace Tetris
             {
                 for (var j = _playArea[i].Length - 1; j >= 0; j--)
                 {
-                    cellContainer[i - 2][j].BackColor =
-                        _playArea[i][j] ? Color.Gray : Color.Black;
+                    if (!cellContainer[i - 2][j].BackColor.Equals(_playArea[i][j] ? Color.Gray : Color.Black))
+                    {
+                        cellContainer[i - 2][j].BackColor = _playArea[i][j] ? Color.Gray : Color.Black;
+                    }
                 }
             }
 
@@ -281,7 +293,10 @@ namespace Tetris
                     continue;
                 }
 
-                cellContainer[point[0] - 2][point[1]].BackColor = Color.Gray;
+                if (!cellContainer[point[0] - 2][point[1]].BackColor.Equals(Color.Gray))
+                {
+                    cellContainer[point[0] - 2][point[1]].BackColor = Color.Gray;
+                }
             }
 
             _form.ResumeLayout();
@@ -289,36 +304,60 @@ namespace Tetris
         }
 
         // block conflict check
+        private bool FallingBlockHasConflictsWithOtherBlocks()
+        {
+            return _fallingBlock.GetPoints().Any(point => _playArea[point[0]][point[1]]);
+        }
+
         private bool FallingBlockHasConflictsWithBottom()
         {
             var fallingPoints = _fallingBlock.GetPoints();
-            return fallingPoints.Any(fallingPoint =>
-                fallingPoint[0] >= _playArea.Length || _playArea[fallingPoint[0]][fallingPoint[1]]);
+            var hasConflict = fallingPoints.Any(fallingPoint => fallingPoint[0] >= _playArea.Length) ||
+                              FallingBlockHasConflictsWithOtherBlocks();
+
+            if (hasConflict)
+            {
+                Log.Debug("reach bottom. points: {point0}, {point1}, {point2}, {point3}",
+                    fallingPoints[0], fallingPoints[1], fallingPoints[2], fallingPoints[3]);
+            }
+
+            return hasConflict;
         }
 
         private Block NewBlock()
         {
             var r = new Random().Next(7);
-            // return new BlockZ(new[] { 2, 5 });
+
+            Block block;
             switch (r)
             {
                 case 0:
-                    return new BlockI(new[] { 2, 5 });
+                    block = new BlockI(new[] { 2, 5 });
+                    break;
                 case 1:
-                    return new BlockO(new[] { 2, 5 });
+                    block = new BlockO(new[] { 2, 5 });
+                    break;
                 case 2:
-                    return new BlockZ(new[] { 2, 5 });
+                    block = new BlockZ(new[] { 2, 5 });
+                    break;
                 case 3:
-                    return new BlockS(new[] { 2, 5 });
+                    block = new BlockS(new[] { 2, 5 });
+                    break;
                 case 4:
-                    return new BlockJ(new[] { 2, 5 });
+                    block = new BlockJ(new[] { 2, 5 });
+                    break;
                 case 5:
-                    return new BlockL(new[] { 2, 5 });
+                    block = new BlockL(new[] { 2, 5 });
+                    break;
                 case 6:
-                    return new BlockT(new[] { 2, 5 });
+                    block = new BlockT(new[] { 2, 5 });
+                    break;
                 default:
                     return NewBlock();
             }
+
+            Log.Debug("create block");
+            return block;
         }
     }
 }

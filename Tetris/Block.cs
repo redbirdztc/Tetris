@@ -9,7 +9,7 @@ namespace Tetris
 
         private int[][] RecordedPoints;
 
-        public IEnumerable<int[]> GetPoints()
+        public int[][] GetPoints()
         {
             return Points;
         }
